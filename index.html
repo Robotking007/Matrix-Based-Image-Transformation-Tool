@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrix Image Transformer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Matrix-Based Image Transformation Tool</h1>
+    <p class="subtitle">Apply linear algebra transformations to images in real time</p>
+  </header>
+
+  <main>
+    <!-- Left Panel: Controls -->
+    <aside class="control-panel">
+      <!-- Image Upload -->
+      <section class="panel-section">
+        <h2>Image Upload</h2>
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-placeholder" id="uploadPlaceholder">
+            <span class="upload-icon">&#128247;</span>
+            <p>Drag &amp; drop an image here<br>or click to browse</p>
+          </div>
+          <img id="uploadPreview" class="upload-preview hidden" alt="Preview">
+          <input type="file" id="fileInput" accept="image/*" hidden>
+        </div>
+      </section>
+
+      <!-- Transformation Matrix -->
+      <section class="panel-section">
+        <h2>Transformation Matrix (3&times;3)</h2>
+        <div class="matrix-grid" id="matrixGrid">
+          <input type="number" step="any" class="matrix-cell" data-row="0" data-col="0" value="1">
+          <input type="number" step="any" class="matrix-cell" data-row="0" data-col="1" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="0" data-col="2" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="1" data-col="0" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="1" data-col="1" value="1">
+          <input type="number" step="any" class="matrix-cell" data-row="1" data-col="2" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="2" data-col="0" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="2" data-col="1" value="0">
+          <input type="number" step="any" class="matrix-cell" data-row="2" data-col="2" value="1">
+        </div>
+        <div class="matrix-info">
+          <span>det(M) = <strong id="detValue">1.000</strong></span>
+          <label class="interpolation-toggle">
+            <input type="checkbox" id="bilinearToggle"> Bilinear Interpolation
+          </label>
+        </div>
+      </section>
+
+      <!-- Preset Transformations -->
+      <section class="panel-section">
+        <h2>Preset Transformations</h2>
+
+        <div class="preset-group">
+          <h3>Rotation</h3>
+          <div class="slider-row">
+            <label for="rotAngle">Angle:</label>
+            <input type="range" id="rotAngle" min="-180" max="180" value="0" step="1">
+            <span class="slider-value" id="rotAngleVal">0&deg;</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="rotate">Apply Rotation</button>
+            <button class="preset-btn small" data-preset="rotate90">90&deg;</button>
+            <button class="preset-btn small" data-preset="rotate180">180&deg;</button>
+            <button class="preset-btn small" data-preset="rotate270">270&deg;</button>
+          </div>
+        </div>
+
+        <div class="preset-group">
+          <h3>Scaling</h3>
+          <div class="slider-row">
+            <label for="scaleX">X:</label>
+            <input type="range" id="scaleX" min="-3" max="3" value="1" step="0.1">
+            <span class="slider-value" id="scaleXVal">1.0</span>
+          </div>
+          <div class="slider-row">
+            <label for="scaleY">Y:</label>
+            <input type="range" id="scaleY" min="-3" max="3" value="1" step="0.1">
+            <span class="slider-value" id="scaleYVal">1.0</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="scale">Apply Scale</button>
+          </div>
+        </div>
+
+        <div class="preset-group">
+          <h3>Translation</h3>
+          <div class="slider-row">
+            <label for="transX">X:</label>
+            <input type="range" id="transX" min="-500" max="500" value="0" step="1">
+            <span class="slider-value" id="transXVal">0</span>
+          </div>
+          <div class="slider-row">
+            <label for="transY">Y:</label>
+            <input type="range" id="transY" min="-500" max="500" value="0" step="1">
+            <span class="slider-value" id="transYVal">0</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="translate">Apply Translation</button>
+          </div>
+        </div>
+
+        <div class="preset-group">
+          <h3>Shearing</h3>
+          <div class="slider-row">
+            <label for="shearX">X:</label>
+            <input type="range" id="shearX" min="-2" max="2" value="0" step="0.05">
+            <span class="slider-value" id="shearXVal">0.0</span>
+          </div>
+          <div class="slider-row">
+            <label for="shearY">Y:</label>
+            <input type="range" id="shearY" min="-2" max="2" value="0" step="0.05">
+            <span class="slider-value" id="shearYVal">0.0</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="shear">Apply Shear</button>
+          </div>
+        </div>
+
+        <div class="preset-group">
+          <h3>Reflection</h3>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="reflectX">Flip Horizontal</button>
+            <button class="preset-btn" data-preset="reflectY">Flip Vertical</button>
+          </div>
+        </div>
+
+        <div class="preset-group">
+          <h3>Perspective</h3>
+          <div class="slider-row">
+            <label for="perspG">g:</label>
+            <input type="range" id="perspG" min="-0.005" max="0.005" value="0" step="0.0001">
+            <span class="slider-value" id="perspGVal">0</span>
+          </div>
+          <div class="slider-row">
+            <label for="perspH">h:</label>
+            <input type="range" id="perspH" min="-0.005" max="0.005" value="0" step="0.0001">
+            <span class="slider-value" id="perspHVal">0</span>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="perspective">Apply Perspective</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Bar -->
+      <section class="panel-section action-bar">
+        <button class="action-btn primary" id="btnApplyCompose" title="Compose current matrix with accumulated transform">Apply &amp; Compose</button>
+        <button class="action-btn" id="btnReset" title="Reset to identity matrix">Reset</button>
+        <button class="action-btn" id="btnUndo" title="Undo (Ctrl+Z)">&#8630; Undo</button>
+        <button class="action-btn" id="btnRedo" title="Redo (Ctrl+Y)">&#8631; Redo</button>
+        <button class="action-btn success" id="btnDownload" title="Download transformed image (Ctrl+S)">&#11015; Download</button>
+      </section>
+    </aside>
+
+    <!-- Right Panel: Canvas -->
+    <section class="canvas-panel">
+      <div class="canvas-container">
+        <div class="canvas-wrapper">
+          <h3>Original</h3>
+          <canvas id="originalCanvas"></canvas>
+        </div>
+        <div class="canvas-wrapper">
+          <h3>Transformed</h3>
+          <canvas id="transformedCanvas"></canvas>
+        </div>
+      </div>
+      <div class="canvas-info">
+        <span id="imgDimensions">No image loaded</span>
+        <span id="transformType">Transform: Identity</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Matrix-Based Image Transformation Tool &copy; 2026 | Built with pure HTML, CSS &amp; JavaScript</p>
+  </footer>
+
+  <script src="js/matrix.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/transform.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
